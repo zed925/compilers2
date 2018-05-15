@@ -2,7 +2,7 @@
 import copy
 import sys
 
-var_x = "['MEM', ['+', 'TEMP FP', 'CONST x']]"
+var_x = "['MEM', ['+', 'TEMP FP', 'CONST "
 
 def read(file, tree, loop):
     
@@ -120,18 +120,29 @@ class Tree:
             ans.append(self.root.data)
             temp = self.root
             for child in temp.children:
-                print(child.data)
+                #print(child.data)
                 ans.append(child.fold())
         for i in ans:
             #print((var_x) in str(i))
             line = str(i)
-            line = line.replace(var_x, 'x')
-            print(line)
+            line = findVar(line)
+            #print(line)
 
     def get(self):
         return self.root.get(0)
 
+def findVar(line):
+    print("OLD LINE")
+    print(line)
+    index = line.find(var_x)
+    if(index>0):
+        print("NEW LINE")
+        line = line.replace(var_x, '\'')
+        line = line[:line.find(']]',index)]+line[line.find(']]',index)+2:]
+        print(line)
+    print("==============================================")
 
+    return line
 
 class Stack:
     items = []
