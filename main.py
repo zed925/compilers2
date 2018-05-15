@@ -2,6 +2,8 @@
 import copy
 import sys
 
+var_x = "['MEM', ['+', 'TEMP FP', 'CONST x']]"
+
 def read(file, tree, loop):
     
     ifile = open(file)
@@ -12,10 +14,12 @@ def read(file, tree, loop):
         #print((' '*level)+data, level)
         tree.insert(data, level)
     tree.insert("end", 0)
-    for i in tree.stack2.items:
-        print(i)
+    #for i in tree.stack2.items:
+    #    print(i)
 
-    #tree.get()
+    tree.get()
+    print("==============================================")
+    tree.fold()
     
 
 
@@ -64,39 +68,65 @@ class Node:
         for child in self.children:
             child.get(i+1)
 
+    def fold(self):
+        ans = []
+        if self.data:
+            ans = [self.data]
+            if self.data == 'TEMP' or self.data == 'CONST':
+                val = 'CONST '
+                if self.data == 'TEMP':
+                    val = 'TEMP '
+                val += self.children[0].data
+                return val
+            for child in self.children:
+                ans += [child.fold()]
+        return ans
 
 class Tree:
     def __init__(self):
         self.root = None
         self.stack = Stack()
-        self.stack2 = Stack()
+        #self.stack2 = Stack()
     def insert(self, data, level):
         if self.root == None:
             self.root = Node(data, level)
             self.stack.push(self.root)
-            self.stack2.push(self.root.data)
+            #self.stack2.push(self.root.data)
 
         else:
             node = Node(data, level)
             temp = self.stack.peek()
             if(level > temp.level):
                 self.stack.push(node)
-                self.stack2.push([node.data])
+                #self.stack2.push([node.data])
             else:
                 
                 while(self.stack.peek().level >= level and self.stack.size()>1):
                     curr = self.stack.pop()
-                    curr2 = self.stack2.pop()
+                    #curr2 = self.stack2.pop()
                     self.stack.items[-1].children.append(curr)
-                    print(self.stack2.items,curr2)
-                    print(curr.level, self.stack.items[-1].level)
-                    try:
-                        self.stack2.items[-1].append(curr2)
-                    except:
-                        self.stack2.items.append(curr2)
+                    #print(self.stack2.items,curr2)
+                    #print(curr.level, self.stack.items[-1].level)
+                    #try:
+                    #    self.stack2.items[-1].append(curr2)
+                    #except:
+                    #    self.stack2.items.append(curr2)
                 self.stack.push(node)
-                self.stack2.push([node.data])
-           
+                #self.stack2.push([node.data])
+
+    def fold(self):
+        ans = []
+        if self.root:
+            ans.append(self.root.data)
+            temp = self.root
+            for child in temp.children:
+                print(child.data)
+                ans.append(child.fold())
+        for i in ans:
+            #print((var_x) in str(i))
+            line = str(i)
+            line = line.replace(var_x, 'x')
+            print(line)
 
     def get(self):
         return self.root.get(0)
@@ -126,54 +156,9 @@ def main():
     tree = Tree()
     loop = Tree()
     arr = []
-    loopstring="""SEQ
-=SEQ
-==SEQ
-===SEQ
-====SEQ
-=====SEQ
-======SEQ
-=======SEQ
-========MOVE
-=========TEMP
-==========t1
-=========CONST
-==========4
-========MOVE
-=========TEMP
-==========t2
-=========CONST
-==========6
-=======LABEL
-========start
-======CJUMP
-=======<
-=======TEMP
-========t2
-=======TEMP
-========t1
-=======NAME
-========t12
-=======NAME
-========f12
-=====LABEL
-======f12
-====BODY
-===MOVE
-====TEMP
-=====t1
-====+
-=====TEMP
-======t1
-=====CONST
-======1
-==JUMP
-===NAME
-====start
-=LABEL
-==t12"""
+
     loopFile = "loop.lp"
-    file ="testdata7.ir"
+    file ="test.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
