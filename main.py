@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import copy
 import sys
-
+from jouette import tiles
 var_x = "['MEM', ['+', 'TEMP FP', 'CONST "
 
 def read(file, tree, loop):
@@ -19,9 +19,8 @@ def read(file, tree, loop):
 
     tree.get()
     print("==============================================")
-    tree.fold()
+    #tree.fold()
     
-
 
 def readFile(file, tree):
     ifile = open(file)
@@ -34,15 +33,16 @@ def readFile(file, tree):
     
 class Node:
     data = None
+    parent = None
     level = 0
     children = []
     
     def equals(self, other):
         ans = True
         if(self.data == other.data):
-            if not self.level == other.level:
+            #if not self.level == other.level:
                 #print('levels dont match')
-                return False
+            #    return False
             if(len(self.children) == len(other.children)):
                 for i in range(len(self.children)):
                     ans = ans and self.children[i].equals(other.children[i])
@@ -53,6 +53,44 @@ class Node:
                 return False
         else:
             #print('mistmatched data')
+            return False
+
+    def structure(self, other):
+        ans = True
+        #print(self.data, other.data)
+        #
+        if self.data == 'MOVE' and other.data == 'MOVE':
+            self.data ='('+self.children[0].data +' = '+self.children[1].data+')'
+            self.children = []
+            return True    
+        if(other.data == "VARIABLE" or other.data == "EXPRESSION" or other.data == 'input'):
+            #print("WE NOW HAVE",self.data)
+            #print("WEVE DONE IT BOYS", self.parent.parent.parent.data)
+            if other.data == 'VARIABLE':
+                temp = copy.deepcopy(self)
+                self.parent.parent.parent.data = temp.data
+                self.parent.parent.parent.children = temp.children
+            if(other.data == 'EXPRESSION'):
+                #print(self.data)
+                if(self.data == 'input'):
+                    self.parent.parent.data = 'eval(input())'
+                    self.parent.parent.children = []
+           
+            return True
+        if(self.data == other.data):
+            if(len(self.children) == len(other.children)):
+                for i in range(len(self.children)):
+                    ans = ans and self.children[i].structure(other.children[i])
+                #print('all good')
+                return ans
+            else:
+                #print('mismatched kids')
+                return False
+        elif (len(self.children)>0):
+            for child in self.children:
+                child.structure(other)
+            #print('mistmatched data')
+        else:
             return False
         
     def __init__(self,data, level):
@@ -104,6 +142,7 @@ class Tree:
                 while(self.stack.peek().level >= level and self.stack.size()>1):
                     curr = self.stack.pop()
                     #curr2 = self.stack2.pop()
+                    curr.parent = self.stack.items[-1]
                     self.stack.items[-1].children.append(curr)
                     #print(self.stack2.items,curr2)
                     #print(curr.level, self.stack.items[-1].level)
@@ -131,18 +170,8 @@ class Tree:
     def get(self):
         return self.root.get(0)
 
-def findVar(line):
-    print("OLD LINE")
-    print(line)
-    index = line.find(var_x)
-    if(index>0):
-        print("NEW LINE")
-        line = line.replace(var_x, '\'')
-        line = line[:line.find(']]',index)]+line[line.find(']]',index)+2:]
-        print(line)
-    print("==============================================")
-
-    return line
+    def structure(self, other):
+        return self.root.structure(other.root)
 
 class Stack:
     items = []
@@ -163,6 +192,41 @@ class Stack:
 
     def size(self):
         return len(self.items)
+
+def readTile(tile):
+    tiletree = Tree()
+    tile = tile.split('\n')
+    for line in tile:
+        level = line.count('=')
+        data = line[level:]
+        tiletree.insert(data, level)
+    tiletree.insert("end", 0)
+    return tiletree
+
+
+
+def findVar(tree):
+    tree1 = readTile(tiles['var_x'][1])
+    tree2 = readTile(tiles['var_x'][0])
+
+    #tree1.get()
+    #tree2.get()
+    if(tree.structure(tree1)):
+        print("FOUND")
+    elif(tree.structure(tree2)):
+        print("FOUND IN 2")
+    #    tree.get()
+    else:
+        print("NOT FOUND")
+    
+def findInput(tree):
+    tree1 = readTile(tiles['input'])
+    tree.structure(tree1)
+    #tree.get()
+
+def findMove(tree):
+    tree1 = readTile(tiles['var_xe'])
+    tree.structure(tree1)
 def main():
     tree = Tree()
     loop = Tree()
@@ -175,5 +239,9 @@ def main():
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
     read(file, tree, loop)
-
-main()
+    findVar(tree)
+    findInput(tree)
+    findMove(tree)
+    tree.get()
+if __name__ == "__main__":
+    main()
