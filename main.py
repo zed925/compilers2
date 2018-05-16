@@ -8,11 +8,22 @@ def read(file, tree, loop):
     
     ifile = open(file)
     currLevel = -1
+    seq = False
+    counter = 0
     for line in ifile:
+        if counter == 0:
+            if "SEQ" not in line:
+                tree.insert("SEQ",0)
+                seq = True
+            
         level = line.count('=')
+        
         data = line[level:][:-1]
+        if seq:
+            level+=1
         #print((' '*level)+data, level)
         tree.insert(data, level)
+        counter+=1
     tree.insert("end", 0)
     #for i in tree.stack2.items:
     #    print(i)
@@ -60,10 +71,27 @@ class Node:
         #print(self.data, other.data)
         #
         if self.data == 'MOVE' and other.data == 'MOVE':
-            self.data ='('+self.children[0].data +' = '+self.children[1].data+')'
+            self.data =self.children[0].data +' = '+self.children[1].data
             self.children = []
-            return True    
-        if(other.data == "VARIABLE" or other.data == "EXPRESSION" or other.data == 'input'):
+            return True
+        if(other.data =='OP' and self.data in ['+','-','*','/']):
+           childs = [child.data for child in self.children]
+           #print(self.data)
+           #print(childs)
+           if not 'TEMP' in childs:
+               #self.get()
+               if(len(self.children)==2):
+                    a = childs[0]
+                    if a == 'CONST':
+                       a = self.children[0].children[0].data
+                    b = childs[1]
+                    if b == 'CONST':
+                        b = self.children[1].children[0].data
+                    #print(a,b)
+                    self.data = a+' '+self.data+' '+b
+                    self.children = []
+                    return True
+        if(other.data == "VARIABLE" or other.data == "EXPRESSION" or other.data == 'input' or other.data == 'function'):
             #print("WE NOW HAVE",self.data)
             #print("WEVE DONE IT BOYS", self.parent.parent.parent.data)
             if other.data == 'VARIABLE':
@@ -75,12 +103,33 @@ class Node:
                 if(self.data == 'input'):
                     self.parent.parent.data = 'eval(input())'
                     self.parent.parent.children = []
-           
+            if(other.data == 'function'):
+                    #print('were in the function',self.data)
+                    temp = copy.deepcopy(self)
+                    self.parent.parent.data = temp.data
+                    self.parent.parent.children = self.parent.parent.children[1:]
+                    child = [child.data for child in self.parent.parent.children]
+                    #print(child)
+                    params = '('
+                    if(len(self.parent.parent.children)>1):
+                        for i in range (len(self.parent.parent.children)-1):
+                            params+= self.parent.parent.children[i].data+','
+                        params+= self.parent.parent.children[-1]+')'
+                    elif(len(self.parent.parent.children)==1):
+                        params+= self.parent.parent.children[-1].data+')'
+                    else:
+                        params+= ')'
+                    self.parent.parent.data+=params
+                    self.parent.parent.children = []
             return True
+        
         if(self.data == other.data):
             if(len(self.children) == len(other.children)):
                 for i in range(len(self.children)):
-                    ans = ans and self.children[i].structure(other.children[i])
+                    try:
+                        ans = ans and self.children[i].structure(other.children[i])
+                    except:
+                        return ans
                 #print('all good')
                 return ans
             else:
@@ -101,7 +150,7 @@ class Node:
     def add(self,node):
         self.children.append(node)
 
-    def get(self, i):
+    def get(self, i=0):
         print(i*"="+self.data)
         for child in self.children:
             child.get(i+1)
@@ -206,18 +255,10 @@ def readTile(tile):
 
 
 def findVar(tree):
-    tree1 = readTile(tiles['var_x'][1])
-    tree2 = readTile(tiles['var_x'][0])
+    for tile in tiles['var_x']:
+        tree1 = readTile(tile)
+        tree.structure(tree1)
 
-    #tree1.get()
-    #tree2.get()
-    if(tree.structure(tree1)):
-        print("FOUND")
-    elif(tree.structure(tree2)):
-        print("FOUND IN 2")
-    #    tree.get()
-    else:
-        print("NOT FOUND")
     
 def findInput(tree):
     tree1 = readTile(tiles['input'])
@@ -227,21 +268,43 @@ def findInput(tree):
 def findMove(tree):
     tree1 = readTile(tiles['var_xe'])
     tree.structure(tree1)
+
+def findOps(tree):
+    for tile in tiles['ops']:
+        tree1 = readTile(tile)
+        tree.structure(tree1)
+
+def findFunc(tree):
+    #print('finding nemo\n========================')
+    tree1 = readTile(tiles['func'])
+    tree.structure(tree1)
+
+def findConst(tree):
+    #print('finding nemo\n========================')
+    tree1 = readTile(tiles['const'])
+    tree.structure(tree1)
+    
 def main():
     tree = Tree()
     loop = Tree()
     arr = []
 
     loopFile = "loop.lp"
-    file ="test.ir"
+    file ="testdata3.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
     read(file, tree, loop)
     findVar(tree)
+    findOps(tree)
     findInput(tree)
     findMove(tree)
-    tree.get()
+    
+    findFunc(tree)
+    #tree.get()
+    if tree.root.data == 'SEQ':
+        for child in tree.root.children:
+            print(child.data)
 if __name__ == "__main__":
     main()
