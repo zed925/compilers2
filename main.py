@@ -76,18 +76,23 @@ class Node:
             return True
         if(other.data =='OP' and self.data in ['+','-','*','/']):
            childs = [child.data for child in self.children]
-           #print(self.data)
+           for i in range(len(self.children)):
+               if self.children[i].data in ['+','-','*','/']:
+                   self.children[i].structure(other)
+                   #print(self.children[i].data)
+           #print('data', self.data, chick)
            #print(childs)
+           #self.get()
            if not 'TEMP' in childs:
-               #self.get()
+
                if(len(self.children)==2):
-                    a = childs[0]
+                    a = self.children[0].data
                     if a == 'CONST':
                        a = self.children[0].children[0].data
-                    b = childs[1]
+                    b = self.children[1].data
                     if b == 'CONST':
                         b = self.children[1].children[0].data
-                    #print(a,b)
+                    #print('a,b',a,b)
                     self.data = '('+a+' '+self.data+' '+b+')'
                     self.children = []
                     return True
@@ -108,13 +113,13 @@ class Node:
                     temp = copy.deepcopy(self)
                     self.parent.parent.data = temp.data
                     self.parent.parent.children = self.parent.parent.children[1:]
-                    print([child.data for child in self.parent.parent.children])
+                    #print([child.data for child in self.parent.parent.children])
                     child = [child.data if (not child.data in ['TEMP','CONST']) else child.children[0].data for child in self.parent.parent.children]
-                    print(len(child), child)
+                    #print(len(child), child)
                     params = '('
-                    print(params)
+                    #print(params)
                     if(len(child)>1):
-                        print(child)
+                        #print(child)
                         childs = child[:-1]
                         for kid in childs:
                             params+=kid+', '
@@ -300,7 +305,7 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata1.ir"
+    file ="testdata4.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
