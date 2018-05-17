@@ -1,5 +1,14 @@
 CALL
 =NAME
-==print
+==running_man
 =CONST
-==1
+==5
+=+
+==MEM
+===+
+====TEMP
+=====FP
+====CONST
+=====x
+==CONST
+===6

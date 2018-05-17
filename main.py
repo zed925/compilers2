@@ -88,11 +88,11 @@ class Node:
                     if b == 'CONST':
                         b = self.children[1].children[0].data
                     #print(a,b)
-                    self.data = a+' '+self.data+' '+b
+                    self.data = '('+a+' '+self.data+' '+b+')'
                     self.children = []
                     return True
         if(other.data == "VARIABLE" or other.data == "EXPRESSION" or other.data == 'input' or other.data == 'function'):
-            #print("WE NOW HAVE",self.data)
+            #print("WE NOW HAVE",self.data) 
             #print("WEVE DONE IT BOYS", self.parent.parent.parent.data)
             if other.data == 'VARIABLE':
                 temp = copy.deepcopy(self)
@@ -108,33 +108,36 @@ class Node:
                     temp = copy.deepcopy(self)
                     self.parent.parent.data = temp.data
                     self.parent.parent.children = self.parent.parent.children[1:]
-                    child = [child.data for child in self.parent.parent.children]
-                    #print(child)
+                    print([child.data for child in self.parent.parent.children])
+                    child = [child.data if (not child.data in ['TEMP','CONST']) else child.children[0].data for child in self.parent.parent.children]
+                    print(len(child), child)
                     params = '('
-                    if(len(self.parent.parent.children)>1):
-                        for i in range (len(self.parent.parent.children)-1):
-                            params+= self.parent.parent.children[i].data+','
-                        params+= self.parent.parent.children[-1]+')'
-                    elif(len(self.parent.parent.children)==1):
-                        params+= self.parent.parent.children[-1].data+')'
+                    print(params)
+                    if(len(child)>1):
+                        print(child)
+                        childs = child[:-1]
+                        for kid in childs:
+                            params+=kid+', '
+                        params+=child[-1]+')'
+                    elif(len(child)==1):
+                        params+= child[0]+')'
                     else:
-                        params+= ')'
+                        params+= ')'                    
                     self.parent.parent.data+=params
                     self.parent.parent.children = []
             return True
         
         if(self.data == other.data):
-            if(len(self.children) == len(other.children)):
-                for i in range(len(self.children)):
-                    try:
-                        ans = ans and self.children[i].structure(other.children[i])
-                    except:
-                        return ans
-                #print('all good')
-                return ans
-            else:
+            #if(len(self.children) == len(other.children)):
+            for i in range(len(self.children)):
+                try:
+                    ans = ans and self.children[i].structure(other.children[i])
+                except:
+                    return ans
+            return ans
+            #else:
                 #print('mismatched kids')
-                return False
+                
         elif (len(self.children)>0):
             for child in self.children:
                 child.structure(other)
@@ -253,6 +256,13 @@ def readTile(tile):
     return tiletree
 
 
+def munch(tree):
+    #first we do var, then ops, then input, then moves,  then functions
+    findVar(tree)
+    findOps(tree)
+    findInput(tree)
+    findMove(tree)
+    findFunc(tree)
 
 def findVar(tree):
     for tile in tiles['var_x']:
@@ -290,18 +300,13 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata3.ir"
+    file ="testdata1.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
     read(file, tree, loop)
-    findVar(tree)
-    findOps(tree)
-    findInput(tree)
-    findMove(tree)
-    
-    findFunc(tree)
+    munch(tree)
     #tree.get()
     if tree.root.data == 'SEQ':
         for child in tree.root.children:
