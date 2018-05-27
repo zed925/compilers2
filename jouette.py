@@ -1,20 +1,65 @@
+if_else="""SEQ
+=SEQ
+==SEQ
+===SEQ
+====SEQ
+=====SEQ
+======CJUMP
+=======EXPRESSION
+=======LT
+=======CONST
+========VAR
+=======NAME
+========TRUE
+=======NAME
+========FALSE
+=====TRUE_EXPRESSION
+====JUMP
+=====done
+===LABEL
+====FALSE
+==FALSE_EXPRESSION
+=LABEL
+==done"""
+
+while_loop="""SEQ
+=SEQ
+==SEQ
+===SEQ
+====SEQ
+=====LABEL
+======TEST
+=====CJUMP
+======E
+======LT
+======CONST
+=======VAR
+======NAME
+=======done
+======NAME
+=======BODY
+====LABEL
+=====BODY
+===STUFF
+=LABEL
+==DONE"""
 
 var_x = """MEM
 =+
 ==TEMP
 ===FP
 ==CONST
-===VARIABLE"""
+===VAR"""
 
 var_x2 = """MEM
 =+
 ==CONST
-===VARIABLE
+===VAR
 ==TEMP
 ===FP"""
 
 var_xe = """MOVE
-=VARIABLE
+=VAR
 =EXPRESSION"""
 
 input_tile = """CALL
@@ -27,28 +72,30 @@ func_tile = """CALL
 =PARAM"""
 
 add_tile_1 ="""OP
-=VARIABLE
+=VAR
 =CONST
 ==N"""
 
 add_tile_2 ="""OP
 =CONST
 ==N
-=VARIABLE
+=VAR
 """
 
 add_tile_3 ="""OP
-=VARIABLE
-=VARIABLE
+=VAR
+=VAR
 """
 
 const = """CONST
 =N"""
-tiles = {"var_x": [var_x, var_x2],
-         "var_xe" : var_xe,
-         'input': input_tile,
-         'func':func_tile,
-         'ops': {add_tile_1, add_tile_2, add_tile_3},
-         'const': const}
+tiles = {"var_x"   : [var_x, var_x2],
+         "var_xe"  : var_xe,
+         'input'   : input_tile,
+         'func'    : func_tile,
+         'ops'     : {add_tile_1, add_tile_2, add_tile_3},
+         'const'   : const,
+         'ifelse'  : if_else,
+         'while'   : while_loop}
 
 

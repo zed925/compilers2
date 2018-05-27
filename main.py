@@ -1,9 +1,10 @@
 #!/usr/bin/python
 import copy
 import sys
+import re
 from jouette import tiles
 var_x = "['MEM', ['+', 'TEMP FP', 'CONST "
-
+pattern = '\d*'
 def read(file, tree, loop):
     
     ifile = open(file)
@@ -66,6 +67,55 @@ class Node:
             #print('mistmatched data')
             return False
 
+    def findIf(self, other):
+        ans = True
+        if(self.data == "CJUMP" and other.data == "CJUMP"):
+            self.data = "if ("+self.children[0].data+" < "+self.children[2].data+"):"
+            self.children = []
+            el = Node("else:", self.level)
+            el.children = []
+            el.parent = self.parent
+            self.parent.children = [self]
+            self.parent.children.append(el)
+            return True
+
+        if(other.data == "TRUE_EXPRESSION"):
+            self.parent.children[0].children[0].children.append(self)
+            self.parent.children = [self.parent.children[0]]
+            return True
+        
+        if(other.data == "FALSE"):
+            return True
+
+        if(other.data == "FALSE_EXPRESSION"):
+            temp = self
+            temp.level = self.parent.children[0].children[0].children[0].children[0].children[1].level+1
+            self.parent.children[0].children[0].children[0].children[0].children[1].children.append(temp)
+            self.parent.children = [self.parent.children[0]]
+            self.parent = self.parent.children[0].children[0].children[0].children[0].children[1]
+            #lowest seq
+            self.parent.parent.parent.parent.parent.parent.parent.parent.children = self.parent.parent.parent.parent.parent.parent.parent.parent.children[:-1]
+            for child in self.parent.parent.children:
+                self.parent.parent.parent.parent.parent.parent.parent.parent.children.append(child)
+            return True
+        
+        if(self.data == other.data ):
+            for i in range(len(self.children)):
+                try:
+                    ans = ans and self.children[i].findIf(other.children[i])
+                except:
+                    return ans
+            return ans
+            #else:
+                #print('mismatched kids')
+
+        elif (len(self.children)>0):
+            for child in self.children:
+                child.findIf(other)
+            #print('mistmatched data')
+        else:
+            return False
+        
     def structure(self, other):
         ans = True
         #print(self.data, other.data)
@@ -84,7 +134,6 @@ class Node:
            #print(childs)
            #self.get()
            if not 'TEMP' in childs:
-
                if(len(self.children)==2):
                     a = self.children[0].data
                     if a == 'CONST':
@@ -96,18 +145,25 @@ class Node:
                     self.data = '('+a+' '+self.data+' '+b+')'
                     self.children = []
                     return True
-        if(other.data == "VARIABLE" or other.data == "EXPRESSION" or other.data == 'input' or other.data == 'function'):
+        if(self.data == "CONST" and re.match(pattern, self.children[0].data).group()):
+                #print("THIS CHILD IS",self.children[0].data)
+                self.data = self.children[0].data
+                self.children = []
+        if(other.data == "VAR" or other.data == "EXPRESSION" or other.data == 'input' or other.data == 'function'):
             #print("WE NOW HAVE",self.data) 
             #print("WEVE DONE IT BOYS", self.parent.parent.parent.data)
-            if other.data == 'VARIABLE':
+            if other.data == 'VAR':
+                #print("SELF DATA",self.data)
                 temp = copy.deepcopy(self)
                 self.parent.parent.parent.data = temp.data
                 self.parent.parent.parent.children = temp.children
+                
             if(other.data == 'EXPRESSION'):
                 #print(self.data)
                 if(self.data == 'input'):
                     self.parent.parent.data = 'eval(input())'
                     self.parent.parent.children = []
+            
             if(other.data == 'function'):
                     #print('were in the function',self.data)
                     temp = copy.deepcopy(self)
@@ -163,6 +219,12 @@ class Node:
         for child in self.children:
             child.get(i+1)
 
+    def print(self, i=0):
+        if(i > -1):
+            print(i*"\t"+self.data)
+        for child in self.children:
+            child.print(i+1)
+            
     def fold(self):
         ans = []
         if self.data:
@@ -227,6 +289,14 @@ class Tree:
     def get(self):
         return self.root.get(0)
 
+    def print(self):
+        return self.root.print(-1)
+
+    def findIf(self, other):
+        for i in range(len(self.root.children)):
+           self.root.children[i].findIf(other.root)
+        
+    
     def structure(self, other):
         return self.root.structure(other.root)
 
@@ -262,17 +332,33 @@ def readTile(tile):
 
 
 def munch(tree):
-    #first we do var, then ops, then input, then moves,  then functions
+    #first we do var, then ops, then input, then moves, then functions
+    #print("test")
+    findIfElse(tree)
+
     findVar(tree)
+    #print("test1")
+ 
     findOps(tree)
+    #print("test2")
+
     findInput(tree)
+    #print("test3")
+
     findMove(tree)
+    #print("test4")
+
     findFunc(tree)
 
+    #print("test5")
+    #print('test6')
 def findVar(tree):
+    
     for tile in tiles['var_x']:
+        #print('checking')
         tree1 = readTile(tile)
         tree.structure(tree1)
+
 
     
 def findInput(tree):
@@ -298,23 +384,31 @@ def findConst(tree):
     #print('finding nemo\n========================')
     tree1 = readTile(tiles['const'])
     tree.structure(tree1)
-    
+
+def findIfElse(tree):
+    tree1 = readTile(tiles['ifelse'])
+    tree.findIf(tree1)
+
+
+
 def main():
     tree = Tree()
     loop = Tree()
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata4.ir"
+    file ="testdata5.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
     read(file, tree, loop)
     munch(tree)
-    #tree.get()
-    if tree.root.data == 'SEQ':
-        for child in tree.root.children:
-            print(child.data)
+    #findIfElse(tree)
+    print("OUTPUT\n==============================================")
+    tree.print()
+    #if tree.root.data == 'SEQ':
+    #    for child in tree.root.children:
+    #        print((child.level-1)*' '+child.data)
 if __name__ == "__main__":
     main()
