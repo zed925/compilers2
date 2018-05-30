@@ -67,6 +67,41 @@ class Node:
             #print('mistmatched data')
             return False
 
+    def findWhile(self, other):
+        ans = True
+        #print(self.data,self.level-1, other.data, other.level)
+        if(self.data == "CJUMP" and other.data == "CJUMP"):
+
+            if(self.children[0].data not in ['MEM','CONST']):
+                 self.data = "while ("+self.children[0].data+" < "+self.children[2].data+"):" 
+            self.children = []
+            self.parent.children = [self]
+            return True
+        
+        if(other.data == "STUFF"):
+            temp = self.children
+            self.parent.parent.parent.data = self.parent.children[0].children[0].children[0].data
+            self.parent.parent.parent.children = []
+            for child in temp:
+                self.parent.parent.parent.children.append(child)
+                
+        if(self.data == other.data ):
+            for i in range(len(self.children)):
+                try:
+                    ans = ans and self.children[i].findWhile(other.children[i])
+                except:
+                    return ans
+            return ans
+            #else:
+                #print('mismatched kids')
+
+        elif (len(self.children)>0):
+            for child in self.children:
+                child.findWhile(other)
+            #print('mistmatched data')
+        else:
+            return False
+    
     def findIf(self, other):
         ans = True
         if(self.data == "CJUMP" and other.data == "CJUMP"):
@@ -307,7 +342,11 @@ class Tree:
         for i in range(len(self.root.children)):
            self.root.children[i].findIf(other.root)
         
-    
+    def findWhile(self, other):
+        for i in range(len(self.root.children)):
+            #other.print()
+            self.root.children[i].findWhile(other.root)
+            
     def structure(self, other):
         return self.root.structure(other.root)
 
@@ -401,7 +440,9 @@ def findIfElse(tree):
     tree1 = readTile(tiles['ifelse'])
     tree.findIf(tree1)
 
-
+def findWhile(tree):
+    tree1 = readTile(tiles['while'])
+    tree.findWhile(tree1)
 
 def main():
     tree = Tree()
@@ -409,16 +450,18 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata6.ir"
-    #file = sys.argv[1]
+    #file ="testdata6.ir"
+    file = sys.argv[1]
 
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
     read(file, tree, loop)
     munch(tree)
-    findIfElse(tree)
     print("OUTPUT\n==============================================")
+    findWhile(tree)
+    findIfElse(tree)
     tree.print()
+    #findWhile(tree)
     #if tree.root.data == 'SEQ':
     #    for child in tree.root.children:
     #        print((child.level-1)*' '+child.data)
