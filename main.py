@@ -409,7 +409,7 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata5.ir"
+    file ="testdata6.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
