@@ -78,7 +78,7 @@ class Node:
             self.parent.children = [self]
             return True
         
-        if(other.data == "STUFF"):
+        if(other.data == "STUFF" and not (self.data == "SEQ" and self.children[1].data == "SEQ")):
             temp = self.children
             self.parent.parent.parent.data = self.parent.children[0].children[0].children[0].data
             self.parent.parent.parent.children = []
@@ -450,16 +450,17 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    #file ="testdata6.ir"
-    file = sys.argv[1]
+    file ="testdata5.ir"
+    #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
     read(file, tree, loop)
     munch(tree)
     print("OUTPUT\n==============================================")
-    findWhile(tree)
-    findIfElse(tree)
+    for i in range(4):
+        findWhile(tree)
+        findIfElse(tree)
     tree.print()
     #findWhile(tree)
     #if tree.root.data == 'SEQ':
