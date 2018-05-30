@@ -73,7 +73,11 @@ class Node:
         if(self.data == "CJUMP" and other.data == "CJUMP"):
 
             if(self.children[0].data not in ['MEM','CONST']):
-                 self.data = "while ("+self.children[0].data+" < "+self.children[2].data+"):" 
+                if self.children[1].data == "LT":
+                     self.data = "while ("+self.children[0].data+" < "+self.children[2].data+"):" 
+                elif self.children[1].data == "GT":
+                     self.data = "while ("+self.children[0].data+" > "+self.children[2].data+"):" 
+
             self.children = []
             self.parent.children = [self]
             return True
@@ -108,7 +112,11 @@ class Node:
             #print(self.children[0].data)
 
             if(self.children[0].data not in ['MEM','CONST']):
-                 self.data = "if ("+self.children[0].data+" < "+self.children[2].data+"):" 
+                if self.children[1].data == "LT":
+                     self.data = "if ("+self.children[0].data+" < "+self.children[2].data+"):" 
+                elif self.children[1].data == "GT":
+                     self.data = "if ("+self.children[0].data+" > "+self.children[2].data+"):" 
+
             #else:
             #    if(self.children[0].data =="MEM"):
             #        print(self.children[0].children[0].children[0].data)
@@ -450,7 +458,7 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata5.ir"
+    file ="testdata9.ir"
     #file = sys.argv[1]
 
     #readLoop(loopstring, loop)
