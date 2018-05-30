@@ -30,17 +30,19 @@ while_loop="""SEQ
 =====LABEL
 ======TEST
 =====CJUMP
-======E
+======VAR
 ======LT
 ======CONST
 =======VAR
 ======NAME
-=======done
+=======DONE
 ======NAME
 =======BODY
 ====LABEL
 =====BODY
 ===STUFF
+==JUMP
+===TEST
 =LABEL
 ==DONE"""
 

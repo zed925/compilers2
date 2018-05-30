@@ -70,7 +70,18 @@ class Node:
     def findIf(self, other):
         ans = True
         if(self.data == "CJUMP" and other.data == "CJUMP"):
-            self.data = "if ("+self.children[0].data+" < "+self.children[2].data+"):"
+            #print(self.children[0].data)
+
+            if(self.children[0].data not in ['MEM','CONST']):
+                 self.data = "if ("+self.children[0].data+" < "+self.children[2].data+"):" 
+            #else:
+            #    if(self.children[0].data =="MEM"):
+            #        print(self.children[0].children[0].children[0].data)
+            #        if(self.children[0].children[0].children[0].data == "TEMP"):
+            #            self.data =  "if ("+self.children[0].children[0].children[1].children[0].data+" < "+self.children[2].children[0].data+"):"
+            #        else:
+            #            self.data =  "if ("+self.children[0].children[0].children[0].children[0].data+" < "+self.children[2].children[0].data+"):"
+
             self.children = []
             el = Node("else:", self.level)
             el.children = []
@@ -221,7 +232,7 @@ class Node:
 
     def print(self, i=0):
         if(i > -1):
-            print(i*"\t"+self.data)
+            print(i*"   "+self.data)
         for child in self.children:
             child.print(i+1)
             
@@ -334,9 +345,10 @@ def readTile(tile):
 def munch(tree):
     #first we do var, then ops, then input, then moves, then functions
     #print("test")
+    findVar(tree)
+ 
     findIfElse(tree)
 
-    findVar(tree)
     #print("test1")
  
     findOps(tree)
@@ -404,7 +416,7 @@ def main():
     #readFile(loopFile, loop)
     read(file, tree, loop)
     munch(tree)
-    #findIfElse(tree)
+    findIfElse(tree)
     print("OUTPUT\n==============================================")
     tree.print()
     #if tree.root.data == 'SEQ':
