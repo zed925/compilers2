@@ -5,7 +5,7 @@ import re
 from jouette import tiles
 var_x = "['MEM', ['+', 'TEMP FP', 'CONST "
 pattern = '\d*'
-def read(file, tree, loop):
+def read(file, tree, loop, tree_print):
     
     ifile = open(file)
     currLevel = -1
@@ -28,9 +28,9 @@ def read(file, tree, loop):
     tree.insert("end", 0)
     #for i in tree.stack2.items:
     #    print(i)
-
-    tree.get()
-    print("==============================================")
+    if(tree_print == 1):
+        tree.get()
+        print("==============================================")
     #tree.fold()
     
 
@@ -88,7 +88,12 @@ class Node:
             self.parent.parent.parent.children = []
             for child in temp:
                 self.parent.parent.parent.children.append(child)
-                
+        elif(other.data == "STUFF" and self.data=="SEQ"):
+            for child in self.children:
+                    print("HELLO WORLD 2.0")
+                    findIfElse(child)
+                    findWhile(child)
+            return True
         if(self.data == other.data ):
             for i in range(len(self.children)):
                 try:
@@ -458,12 +463,16 @@ def main():
     arr = []
 
     loopFile = "loop.lp"
-    file ="testdata9.ir"
-    #file = sys.argv[1]
-
+    #file ="testdata9.ir"
+    file = sys.argv[1]
+    tree_print = 0
+    try:
+        tree_print = eval(sys.argv[2])
+    except:
+        tree_print = 0
     #readLoop(loopstring, loop)
     #readFile(loopFile, loop)
-    read(file, tree, loop)
+    read(file, tree, loop, tree_print)
     munch(tree)
     print("OUTPUT\n==============================================")
     for i in range(4):
